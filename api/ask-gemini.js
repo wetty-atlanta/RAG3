@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
 
   try {
     const { plot, question } = req.body;
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `あなたはプロの漫画編集者です。提供されたプロットの内容にのみ基づいて、ユーザーからの質問に、親しみやすく分かりやすい言葉で回答してください。\n\n# 制約事項\n- 回答は必ずプロットの記述に基づいたものにしてください。\n- プロットに書かれていない情報については、推測で答えず、「プロット内では言及されていません」と明確に述べてください。\n\n# プロット\n---\n${plot}\n---\n# ユーザーからの質問\n${question}`;
     
