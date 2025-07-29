@@ -1,8 +1,8 @@
 {
-  "name": "manga-qa-rag-app",
+  "name": "manga-qa-vercel-functions",
   "version": "1.0.0",
   "dependencies": {
-    "@google/generative-ai": "^0.12.0",
-    "@chroma-ai/chroma": "^1.8.1"
+    "@google/generative-ai": "^0.2.1",
+    "chromadb": "^1.8.1" 
   }
 }
