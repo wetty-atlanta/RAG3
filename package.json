@@ -1,0 +1,8 @@
+{
+  "name": "manga-qa-rag-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "@google/generative-ai": "^0.12.0",
+    "@chroma-ai/chroma": "^1.8.1"
+  }
+}
