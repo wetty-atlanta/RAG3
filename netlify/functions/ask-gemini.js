@@ -21,8 +21,8 @@ const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" })
 module.exports = async (req, res) => { // Vercelの場合
 // exports.handler = async (event) => { // Netlifyの場合
   // ▼▼▼ Netlifyの場合は以下の2行のコメントを外してください ▼▼▼
-  // if (event.httpMethod !== 'POST') { return { statusCode: 405, body: 'Method Not Allowed' }; }
-  // const { question } = JSON.parse(event.body);
+  if (event.httpMethod !== 'POST') { return { statusCode: 405, body: 'Method Not Allowed' }; }
+  const { question } = JSON.parse(event.body);
 
   // ▼▼▼ Vercelの場合は以下の2行を使用 ▼▼▼
   if (req.method !== 'POST') { return res.status(405).send('Method Not Allowed'); }
