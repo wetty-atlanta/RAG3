@@ -17,52 +17,58 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
 
 
-// --- Netlifyのサーバー機能のメイン処理 ---
-exports.handler = async (event) => {
-  const startTime = Date.now();
-  console.log("サーバー機能開始");
-  
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
+// --- メイン処理 ---
+module.exports = async (req, res) => { // Vercelの場合
+// exports.handler = async (event) => { // Netlifyの場合
+  // ▼▼▼ Netlifyの場合は以下の2行のコメントを外してください ▼▼▼
+  // if (event.httpMethod !== 'POST') { return { statusCode: 405, body: 'Method Not Allowed' }; }
+  // const { question } = JSON.parse(event.body);
+
+  // ▼▼▼ Vercelの場合は以下の2行を使用 ▼▼▼
+  if (req.method !== 'POST') { return res.status(405).send('Method Not Allowed'); }
+  const { question } = req.body;
 
   try {
-    const { question } = JSON.parse(event.body);
     if (!question) {
-        return { statusCode: 400, body: JSON.stringify({ error: "質問がありません。" }) };
+        // Vercelの場合
+        return res.status(400).json({ error: "質問がありません。" });
+        // Netlifyの場合: return { statusCode: 400, body: JSON.stringify({ error: "質問がありません。" }) };
     }
 
-    console.log(`[${Date.now() - startTime}ms] 1. 質問のベクトル化を開始...`);
-    const questionEmbeddingResult = await embeddingModel.embedContent(question);
+    // 1. 質問をベクトル化
+    //    ▼▼▼ ここに taskType を追加しました ▼▼▼
+    const questionEmbeddingResult = await embeddingModel.embedContent(
+        question,
+        "RETRIEVAL_QUERY" // 検索用の質問（QUERY）であることを明記
+    );
     const questionEmbedding = questionEmbeddingResult.embedding.values;
-    console.log(`[${Date.now() - startTime}ms] ...ベクトル化完了`);
 
-    console.log(`[${Date.now() - startTime}ms] 2. Firestoreでのベクトル検索を開始...`);
-    const vectorQuery = db.collection('plot_vectors').findNearest('embedding', questionEmbedding, { limit: 5, distanceMeasure: 'COSINE' });
+    // 2. Firestoreでベクトル類似度検索を実行
+    const vectorQuery = db.collection('plot_vectors').findNearest('embedding', questionEmbedding, {
+      limit: 10,
+      distanceMeasure: 'COSINE'
+    });
     const querySnapshot = await vectorQuery.get();
-    console.log(`[${Date.now() - startTime}ms] ...ベクトル検索完了 (${querySnapshot.docs.length}件取得)`);
-    
+
+    // 3. 取得したプロットの断片をコンテキストとして整理
     const context = querySnapshot.docs.map(doc => doc.data().text).join("\n\n---\n\n");
+
+    // 4. 最終的なプロンプトを組み立てて、Proモデルに質問
     const prompt = `あなたはプロの漫画編集者です。提供された以下の「参考情報」にのみ基づいて、ユーザーからの「質問」に回答してください。\n\n# 参考情報\n---\n${context}\n---\n\n# 質問\n${question}`;
     
-    console.log(`[${Date.now() - startTime}ms] 3. Gemini Flashでの回答生成を開始...`);
-    const result = await genAI.getGenerativeModel({ model: "gemini-1.5-flash" }).generateContent(prompt);
+    const result = await genAI.getGenerativeModel({ model: "gemini-1.5-pro" }).generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-    console.log(`[${Date.now() - startTime}ms] ...回答生成完了`);
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify({ answer: text })
-    };
+    // 5. AIの回答を返す
+    // Vercelの場合
+    return res.status(200).json({ answer: text });
+    // Netlifyの場合: return { statusCode: 200, body: JSON.stringify({ answer: text }) };
 
   } catch (error) {
-    console.error(`[${Date.now() - startTime}ms] サーバー機能エラー:`, error);
-    return {
-        statusCode: 500,
-        body: JSON.stringify({ error: "サーバー内部でエラーが発生しました。", details: error.message })
-    };
-  } finally {
-      console.log(`[${Date.now() - startTime}ms] サーバー機能終了`);
+    console.error("サーバー機能エラー:", error);
+    // Vercelの場合
+    return res.status(500).json({ error: "サーバー内部でエラーが発生しました。", details: error.message });
+    // Netlifyの場合: return { statusCode: 500, body: JSON.stringify({ error: "サーバー内部でエラーが発生しました。", details: error.message }) };
   }
 };
