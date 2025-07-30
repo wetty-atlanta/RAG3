@@ -30,9 +30,9 @@ const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" })
 
   try {
     if (!question) {
-        // Vercelの場合
-        return res.status(400).json({ error: "質問がありません。" });
-        // Netlifyの場合: return { statusCode: 400, body: JSON.stringify({ error: "質問がありません。" }) };
+        // Vercelの場合:return res.status(400).json({ error: "質問がありません。" });
+        // Netlifyの場合: 
+	return { statusCode: 400, body: JSON.stringify({ error: "質問がありません。" }) };
     }
 
     // 1. 質問をベクトル化
@@ -62,13 +62,15 @@ const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" })
 
     // 5. AIの回答を返す
     // Vercelの場合
-    return res.status(200).json({ answer: text });
-    // Netlifyの場合: return { statusCode: 200, body: JSON.stringify({ answer: text }) };
+    //return res.status(200).json({ answer: text });
+    // Netlifyの場合: 
+	return { statusCode: 200, body: JSON.stringify({ answer: text }) };
 
   } catch (error) {
     console.error("サーバー機能エラー:", error);
     // Vercelの場合
-    return res.status(500).json({ error: "サーバー内部でエラーが発生しました。", details: error.message });
-    // Netlifyの場合: return { statusCode: 500, body: JSON.stringify({ error: "サーバー内部でエラーが発生しました。", details: error.message }) };
+    //return res.status(500).json({ error: "サーバー内部でエラーが発生しました。", details: error.message });
+    // Netlifyの場合: 
+	return { statusCode: 500, body: JSON.stringify({ error: "サーバー内部でエラーが発生しました。", details: error.message }) };
   }
 };
