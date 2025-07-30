@@ -51,3 +51,4 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: "サーバー内部でエラーが発生しました。", details: error.message });
   }
 };
+
